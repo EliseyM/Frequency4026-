@@ -85,13 +85,236 @@
         </section>
         <section id="mapSection" class="panel">
             <h2>🗺️ Монитор тактической карты</h2>
-            <div class="map-wrapper" id="tacticalMap">
-                <div class="map-grid-line" style="width: 100%; height: 1px; top: 50%;"></div>
-                <div class="map-grid-line" style="width: 100%; height: 1px; top: 25%;"></div>
-                <div class="map-grid-line" style="width: 100%; height: 1px; top: 75%;"></div>
-                <div class="map-grid-line" style="width: 1px; height: 100%; left: 50%;"></div>
-                <div class="map-grid-line" style="width: 1px; height: 100%; left: 25%;"></div>
-                <div class="map-grid-line" style="width: 1px; height: 100%; left: 75%;"></div>
+            map-grid-line" style="width: 1px; height: 100%; left: 50%;"></div>
+                <!-- Динамические узлы карты будут генерироваться через JS -->
+            </div>
+        </section>
+
+        <div class="grid">
+            <section class="panel stats">
+                <h2>📊 Статус терминала</h2>
+                <div>Ресурсы: <b id="scrapText">0</b> ⚙️ Лом | <b id="ammoText">5</b> 🎒 Патроны</div>
+                <div>Жизнеобеспечение: <b id="foodText">4</b> 🍞 Еда | <b id="hpText">100</b>% ❤️ Здоровье</div>
+                <div style="margin-top: 10px;">
+                    Время: <span id="timeText" class="day-indicator">День 1</span> | 
+                    Радиостанция: <b id="radioText" style="color: #f43f5e;">Сломана ❌</b>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>🛠️ Доступные действия</h2>
+                <div id="actionButtons">
+                    <button id="scavengeBtn" onclick="doAction('scavenge')">🔍 Вылазка за ломом</button>
+                    <button id="huntBtn" onclick="doAction('hunt')">🌲 Охота (Использовать патрон)</button>
+                    <button id="repairRadioBtn" onclick="doAction('repair')">⚙️ Чинить радио (10 лома)</button>
+                    <button id="sleepBtn" onclick="doAction('sleep')">💤 Лечь спать (Завершить день)</button>
+                </div>
+            </section>
+        </div>
+
+        <section id="locationContainer" class="panel hidden">
+            <h2>📍 Доступные сектора для зачистки</h2>
+            <div id="locationButtons"></div>
+        </section>
+
+        <section id="traderPanel" class="trader-panel hidden">
+            <h2>🛒 Странствующий торговец (Только днем)</h2>
+            <p>«Принес немного припасов из дальних бункеров. Обменяемся?»</p>
+            <button onclick="trade('buy_ammo')">Купить патрон (3 лома)</button>
+            <button onclick="trade('buy_food')">Купить еду (2 лома)</button>
+            <button onclick="trade('sell_scrap')">Продать 5 лома (Получить 1 еду, 1 патрон)</button>
+        </section>
+
+        <section class="panel">
+            <h2>📟 Журнал терминала</h2>
+            <div id="log">Терминал готов к работе...</div>
+        </section>
+    </div>
+</main>
+
+<script>
+    // Игровое состояние
+    let state = {
+        mode: 'single',
+        day: 1,
+        isNight: false,
+        scrap: 5,
+        ammo: 6,
+        food: 4,
+        hp: 100,
+        radioRepaired: false,
+        phase: 1, // 1: Выживание, 2: Великий Поход, 3: Финал (Босс)
+        distance: 1000,
+        bossHp: 500,
+        currentNode: 0
+    };
+
+    // Конфигурация карты (Узлы)
+    const mapNodes = [
+        { id: 0, name: "Мастерская", x: 15, y: 50, type: "safe" },
+        { id: 1, name: "Старая заправка", x: 35, y: 30, type: "normal" },
+        { id: 2, name: "Заброшенный Бункер", x: 55, y: 70, type: "normal" },
+        { id: 3, name: "Военный Склад", x: 80, y: 45, type: "military" }
+    ];
+
+    // Инициализация заставки (Splash Screen)
+    window.addEventListener('DOMContentLoaded', () => {
+        const splash = document.getElementById('splashScreen');
+        const progressFill = document.getElementById('splashProgress');
+        const progressText = document.getElementById('progressText');
+        const terminal = document.getElementById('splashTerminal');
+        
+        const logs = [
+            "Авторизация в сети Частота 4026...",
+            "Проверка систем жизнеобеспечения... ОК",
+            "Синхронизация с тактической картой сектора...",
+            "Калибровка КВ-приемника... Частота заблокирована.",
+            "Система готова к запуску."
+        ];
+        
+        let progress = 0;
+        let logIndex = 0;
+        
+        const interval = setInterval(() => {
+            progress += Math.floor(Math.random() * 8) + 4;
+            if (progress > 100) progress = 100;
+            
+            progressFill.style.width = progress + '%';
+            progressText.innerText = `Загрузка: ${progress}%`;
+            
+            if (progress >= logIndex * 20 && logIndex < logs.length) {
+                const logLine = document.createElement('div');
+                logLine.innerText = `> ${logs[logIndex]}`;
+                terminal.appendChild(logLine);
+                logIndex++;
+            }
+            
+            if (progress === 100) {
+                clearInterval(interval);
+                setTimeout(() => {
+                    splash.style.opacity = '0';
+                    splash.style.transform = 'scale(1.05)';
+                    setTimeout(() => splash.classList.add('hidden'), 800);
+                }, 400);
+            }
+        }, 80);
+
+        // Проверяем наличие сохранений
+        if (localStorage.getItem('freq4026_save')) {
+            document.getElementById('loadBtn').style.display = 'inline-block';
+        }
+    });
+
+    function addLog(text, className = '') {
+        const log = document.getElementById('log');
+        const span = document.createElement('div');
+        if (className) span.className = className;
+        span.innerHTML = `[День ${state.day} | ${state.isNight ? 'Ночь' : 'День'}] ${text}`;
+        log.appendChild(span);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function updateUI() {
+        document.getElementById('scrapText').innerText = state.scrap;
+        document.getElementById('ammoText').innerText = state.ammo;
+        document.getElementById('foodText').innerText = state.food;
+        document.getElementById('hpText').innerText = state.hp;
+        
+        const timeEl = document.getElementById('timeText');
+        timeEl.innerText = `${state.isNight ? 'Ночь' : 'День'} ${state.day}`;
+        timeEl.className = state.isNight ? 'night-indicator' : 'day-indicator';
+        
+        const radioEl = document.getElementById('radioText');
+        if (state.radioRepaired) {
+            radioEl.innerText = "Стабильно 📡";
+            radioEl.style.color = "#5dfd7a";
+            document.getElementById('repairRadioBtn').disabled = true;
+        } else {
+            radioEl.innerText = "Сломана ❌";
+            radioEl.style.color = "#f43f5e";
+            document.getElementById('repairRadioBtn').disabled = false;
+        }
+
+        // Управление фазами
+        if (state.phase === 1) {
+            document.getElementById('objectiveText').innerText = state.radioRepaired 
+                ? "Выживай до 15-го дня. Собирай ресурсы и патроны, радиопеленг активен!" 
+                : "Почини радиостанцию в мастерской (10 лома), чтобы слушать эфир и копить силы!";
+        } else if (state.phase === 2) {
+            document.getElementById('distanceTracker').classList.remove('hidden');
+            document.getElementById('distanceValue').innerText = state.distance;
+            document.getElementById('objectiveText').innerText = "Вы в пути к Народу! Прокладывайте маршрут через опасные зоны.";
+            document.getElementById('locationContainer').classList.remove('hidden');
+        } else if (state.phase === 3) {
+            document.getElementById('bossPanel').classList.remove('hidden');
+            document.getElementById('locationContainer').classList.add('hidden');
+            document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('objectiveText').innerText = "☣️ УБЕЙТЕ ЛЕВИАФАНА ДЛЯ ПОБЕДЫ В КАМПАНИИ!";
+            document.getElementById('bossHpFill').style.width = `${(state.bossHp / 500) * 100}%`;
+            document.getElementById('bossHpValue').innerText = state.bossHp;
+        }
+
+        renderMap();
+        saveGame();
+    }
+
+    function renderMap() {
+        const map = document.getElementById('tacticalMap');
+        // Очищаем старые узлы, оставляя только сетку
+        const lines = map.querySelectorAll('.map-grid-line');
+        map.innerHTML = '';
+        lines.forEach(l => map.appendChild(l));
+
+        mapNodes.forEach(node => {
+            const nodeEl = document.createElement('div');
+            nodeEl.className = `map-node ${node.id === state.currentNode ? 'active-node' : ''} ${node.type === 'military' ? 'military-node' : ''}`;
+            nodeEl.style.left = `${node.x}%`;
+            nodeEl.style.top = `${node.y}%`;
+            
+            const label = document.createElement('span');
+            label.innerText = node.name;
+            nodeEl.appendChild(label);
+            map.appendChild(nodeEl);
+        });
+
+        // Кнопки переходов для Фазы 2
+        const locButtons = document.getElementById('locationButtons');
+        locButtons.innerHTML = '';
+        mapNodes.forEach(node => {
+            if (node.id !== state.currentNode) {
+                const btn = document.createElement('button');
+                btn.innerText = `Идти в: ${node.name} (-50 км)`;
+                btn.onclick = () => travelToNode(node.id);
+                locButtons.appendChild(btn);
+            }
+        });
+    }
+
+    function initGame(mode) {
+        state.mode = mode;
+        document.getElementById('modeSelection').classList.add('hidden');
+        document.getElementById('gameInterface').classList.remove('hidden');
+        addLog("Кампания началась. Сектор пуст, датчики фиксируют радиомолчание.", "radio-active");
+        updateUI();
+    }
+
+    function doAction(action) {
+        if (state.hp <= 0) return addLog("Вы мертвы. Начните новую игру.", "misfire-warning");
+
+        if (action === 'scavenge') {
+            let found = Math.floor(Math.random() * 4) + 2;
+            state.scrap += found;
+            addLog(`Вы провели вылазку вокруг убежища и нашли +${found} ед. металлолома.`);
+            
+            // Случайное событие торговца днем
+            if (!state.isNight && Math.random() > 0.6) {
+                document.getElementById('traderPanel').classList.remove('hidden');
+                addLog("В лагерь забрел странствующий торговец!", "radio-active");
+            } else {
+                document.getElementById('traderPanel').classList.add('hidden');
+            }
+        } 
+
             </div>
         </section>
         <section id="radioPanel" class="panel hidden">
