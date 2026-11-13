@@ -29,11 +29,9 @@
         .day-indicator { color: #f59e0b; font-weight: bold; }
         .night-indicator { color: #818cf8; font-weight: bold; }
         .distance-tracker { background: #1e293b; border: 1px solid #475569; color: #38bdf8; padding: 10px; border-radius: 6px; font-weight: bold; margin-bottom: 10px; }
-        
         .boss-panel { background: #450a0a; border: 2px solid #ef4444; border-radius: 10px; padding: 16px; margin: 14px 0; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
         .boss-hp-bar { background: #1a0505; border: 1px solid #f43f5e; height: 20px; border-radius: 4px; overflow: hidden; margin: 10px 0; }
         .boss-hp-fill { background: #ef4444; height: 100%; transition: width 0.3s; }
-
         .map-wrapper { background: #0c1211; border: 2px solid #273b35; border-radius: 8px; height: 160px; position: relative; margin: 10px 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .map-grid-line { position: absolute; background: rgba(53, 91, 69, 0.15); }
         .map-node { position: absolute; width: 12px; height: 12px; background: #3a5846; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #84a38e; }
@@ -41,13 +39,7 @@
         .map-node.active-node { background: #5dfd7a; box-shadow: 0 0 10px #5dfd7a; animation: pulse 1s infinite; }
         .map-node.active-node span { color: #5dfd7a; border: 1px solid #355b45; }
         .map-node.military-node { background: #ef4444; }
-        
-        #splashScreen {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #080d0c; color: #5dfd7a; font-family: monospace;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9999; transition: opacity 0.8s ease, transform 0.8s ease; padding: 20px; box-sizing: border-box;
-        }
+        #splashScreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #080d0c; color: #5dfd7a; font-family: monospace; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease, transform 0.8s ease; padding: 20px; box-sizing: border-box; }
         .splash-title { font-size: 28px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 8px rgba(93, 253, 122, 0.6); margin-bottom: 5px; text-align: center; }
         .splash-subtitle { font-size: 14px; color: #84a38e; margin-bottom: 30px; text-align: center; }
         .terminal-box { width: 100%; max-width: 500px; background: #0c1412; border: 1px solid #1e3a2f; border-radius: 6px; padding: 15px; height: 120px; overflow: hidden; display: flex; flex-direction: column-reverse; font-size: 13px; color: #4ade80; margin-bottom: 20px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
@@ -59,40 +51,60 @@
     </style>
 </head>
 <body>
-    <!-- Содержимое игровой разметки и скрипта исправленной версии приложения -->
-    <div id="splashScreen">
-        <div class="splash-title">⚡ ЧАСТОТА 4026 ⚡</div>
-        <div class="splash-subtitle">Квантовый терминал связи v1.0.4 <span class="blink">■</span></div>
-        <div class="terminal-box" id="splashTerminal"><div>Установка связи с протоколом инициализации...</div></div>
-        <div class="progress-bar-container"><div class="progress-bar-fill" id="splashProgress"></div></div>
-        <div style="font-size: 11px; color: #84a38e; margin-top: 8px;" id="progressText">Загрузка: 0%</div>
-    </div>
-    <main>
-        <h1>Частота 4026: Путь Домой</h1>
-        <div class="version-tag">Полная бесплатная версия • Стабильная сборка</div>
-        <section id="modeSelection" class="panel">
-            <h2>Протокол терминала «Убежище-1»</h2>
-            <p>Ты остался один в выжженном секторе...</p>
-            <div style="margin: 15px 0;">
-                <button onclick="initGame('single')">Начать Одиночную Кампанию</button>
-                <button id="multiBtn" onclick="initGame('multi')" style="background: #27272a;" disabled>Начать Великий Поход к Народу (Заблокировано 🔒)</button>
-                <button id="loadBtn" onclick="loadGame()" style="background: #1e293b; border: 1px solid #38bdf8; display: none;">🔄 Продолжить поход</button>
-            </div>
-            <button onclick="clearSaveData()" style="background: #7f1d1d; font-size: 12px; padding: 6px 10px;">Стереть данные памяти (Начать заново)</button>
-        </section>
-        <div id="gameInterface" class="hidden">
-            <!-- Интерфейс игры, карта, мастерская и элементы управления -->
+<div id="splashScreen">
+    <div class="splash-title">⚡ ЧАСТОТА 4026 ⚡</div>
+    <div class="splash-subtitle">Квантовый терминал связи v1.0.4 <span class="blink">■</span></div>
+    <div class="terminal-box" id="splashTerminal"><div>Установка связи с протоколом инициализации...</div></div>
+    <div class="progress-bar-container"><div class="progress-bar-fill" id="splashProgress"></div></div>
+    <div style="font-size: 11px; color: #84a38e; margin-top: 8px;" id="progressText">Загрузка: 0%</div>
+</div>
+<main>
+    <h1>Частота 4026: Путь Домой</h1>
+    <div class="version-tag">Полная бесплатная версия • Стабильная сборка</div>
+    <section id="modeSelection" class="panel">
+        <h2>Протокол терминала «Убежище-1»</h2>
+        <p>Ты остался один в выжженном секторе. Твой народ ушел на восток много месяцев назад. Собери КВ-радиостанцию, выживи 15 дней и запеленгуй зашифрованную частоту, чтобы отыскать дорогу к своим людям.</p>
+        <div style="margin: 15px 0;">
+            <button onclick="initGame('single')">Начать Одиночную Кампанию</button>
+            <button id="multiBtn" onclick="initGame('multi')" style="background: #27272a;" disabled>Начать Великий Поход к Народу (Заблокировано 🔒)</button>
+            <button id="loadBtn" onclick="loadGame()" style="background: #1e293b; border: 1px solid #38bdf8; display: none;">🔄 Продолжить поход</button>
         </div>
-    </main>
-    <script>
-        // Исправленный скрипт управления состоянием и расчетом лута
-        const state = {
-            mode: "single", day: 1, time: "День", health: 100, hunger: 0,
-            location: "Убежище-1", distance: 1000, radioFixed: false,
-            radioFreq: 40.00, freqFound: false, bossHp: 500,
-            inventory: { metal: 3, parts: 1, powder: 1, cloth: 2, medicine: 1, ammo: 5, food: 2, radioPart: 0, gun: false, medkits: 1 }
-        };
-        // Полную логику функций explore(), craft() и инициализации можно найти в исходном файле разметки.
-    </script>
-</body>
-</html>
+        <button onclick="clearSaveData()" style="background: #7f1d1d; font-size: 12px; padding: 6px 10px;">Стереть данные памяти (Начать заново)</button>
+    </section>
+    <div id="gameInterface" class="hidden">
+        <div id="campaignPanel" class="campaign-objective">
+            <b>Текущая задача:</b> <span id="objectiveText">Почини радиостанцию в мастерской, чтобы слушать эфир! Выживи до 15-го дня и найди свой народ.</span>
+        </div>
+        <div id="distanceTracker" class="distance-tracker hidden">📍 Осталось пройти до лагеря твоего народа: <span id="distanceValue">1000</span> км</div>
+        <section id="bossPanel" class="boss-panel hidden">
+            <h2 style="color: #f43f5e; margin: 0;">☣️ ФИНАЛЬНАЯ СТЫЧКА: Радиоактивный Левиафан</h2>
+            <p>Огромный мутант-переросток преградил путь к лагерю. Напарники зажали его в кольцо! Скоординируй огонь!</p>
+            <div class="boss-hp-bar"><div id="bossHpFill" class="boss-hp-fill" style="width: 100%;"></div></div>
+            <p style="font-size: 14px; margin-bottom: 10px;">Здоровье чудовища: <span id="bossHpValue" style="font-weight:bold;">500</span> / 500 HP</p>
+            <button id="attackBossBtn" onclick="attackFinalBoss()" style="background: #ef4444; font-weight: bold; border: 1px solid #f43f5e;">💥 Общий залп отряда (-1 патрон)</button>
+        </section>
+        <section id="mapSection" class="panel">
+            <h2>🗺️ Монитор тактической карты</h2>
+            <div class="map-wrapper" id="tacticalMap">
+                <div class="map-grid-line" style="width: 100%; height: 1px; top: 50%;"></div>
+                <div class="map-grid-line" style="width: 100%; height: 1px; top: 25%;"></div>
+                <div class="map-grid-line" style="width: 100%; height: 1px; top: 75%;"></div>
+                <div class="map-grid-line" style="width: 1px; height: 100%; left: 50%;"></div>
+                <div class="map-grid-line" style="width: 1px; height: 100%; left: 25%;"></div>
+                <div class="map-grid-line" style="width: 1px; height: 100%; left: 75%;"></div>
+            </div>
+        </section>
+        <section id="radioPanel" class="panel hidden">
+            <h3>📡 Модуль коротковолновой связи</h3>
+            <p>Текущая частота настройки: <span id="radioFreqValue" style="color: #5dfd7a; font-weight: bold; font-family: monospace;">40.00</span> MHz</p>
+            <button onclick="tuneRadio(-0.05)">-0.05 MHz</button><button onclick="tuneRadio(0.05)">+0.05 MHz</button>
+            <button id="scanRadioBtn" onclick="scanAirwaves()" style="background: #6b21a8;">Сканировать частоту</button>
+            <div id="radioInterceptText" style="margin-top: 10px; color: #a6d9ae; font-style: italic; background: #131b18; padding: 8px; border-radius: 4px;">Эфир пуст. Слышны только статические помехи.</div>
+        </section>
+        <section class="panel stats" id="stats"></section>
+        <div class="grid">
+            <section class="panel" id="locationContainer">
+                <h2>Исследование</h2>
+                <button onclick="explore('Городские руины')">🏙️ Исследовать город</button>
+                <button onclick="explore('Заброшенный завод')">🏭 Исследовать завод</button>
+                <button onclick="explore('Лесной сектор')">🌲 Исследовать лес</button>
