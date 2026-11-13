@@ -15,18 +15,12 @@
         button:disabled { background: #444; cursor: not-allowed; color: #888; }
         #log { height: 180px; overflow-y: auto; line-height: 1.5; white-space: pre-line; }
         .stats { color: #c7d6cc; }
-        .weight-warning { color: #ff8b8b; font-weight: bold; }
         .hunger-warning { color: #f59e0b; font-weight: bold; }
         .misfire-warning { color: #f43f5e; font-weight: bold; }
         .radio-active { color: #a855f7; font-weight: bold; }
-        .mutant-warning-text { color: #ef4444; font-weight: bold; animation: pulse 2s infinite; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .hidden { display: none !important; }
-        .friend-item { display: flex; justify-content: space-between; align-items: center; background: #131b18; padding: 8px; margin: 5px 0; border-radius: 4px; border-left: 3px solid #b676ff; }
         .campaign-objective { background: #242116; border: 1px solid #56481c; color: #fbe69d; padding: 10px; border-radius: 6px; margin-bottom: 12px; }
-        .mission-panel { background: #1c2d3a; border: 1px solid #31526d; color: #93c5fd; }
-        .mission-panel button { background: #2563eb; }
-        .mission-panel button:hover { background: #3b82f6; }
         .trader-panel { background: #221b21; border: 1px solid #5b3554; border-radius: 10px; padding: 16px; margin: 14px 0; color: #fbcfe8; }
         .trader-panel button { background: #5b3552; }
         .trader-panel button:hover { background: #734568; }
@@ -61,7 +55,7 @@
         <p>Ты остался один в выжженном секторе. Твой народ ушел на восток много месяцев назад. Собери КВ-радиостанцию, выживи 15 дней и запеленгуй зашифрованную частоту, чтобы отыскать дорогу к своим людям.</p>
         <div style="margin: 15px 0;">
             <button onclick="initGame('single')">Начать Одиночную Кампанию</button>
-            <button id="multiBtn" onclick="initGame('multi')" style="background: #27272a;">Начать Великий Поход к Народу (Заблокировано 🔒)</button>
+            <button id="multiBtn" onclick="initGame('multi')" style="background: #27272a;" disabled>Начать Великий Поход к Народу (Заблокировано 🔒)</button>
             <button id="loadBtn" onclick="loadGame()" style="background: #1e293b; border: 1px solid #38bdf8; display: none;">🔄 Продолжить поход</button>
         </div>
         <button onclick="clearSaveData()" style="background: #7f1d1d; font-size: 12px; padding: 6px 10px;">Стереть данные памяти (Начать заново)</button>
@@ -70,7 +64,6 @@
     <div id="gameInterface" class="hidden">
         <div id="campaignPanel" class="campaign-objective">
             <b>Текущая задача:</b> <span id="objectiveText">Почини радиостанцию в мастерской, чтобы слушать эфир! Выживи до 15-го дня и найди свой народ.</span>
-            <div id="mutantRadar" style="margin-top: 5px; color: #fb923c;"></div>
         </div>
 
         <div id="distanceTracker" class="distance-tracker hidden">
@@ -96,8 +89,6 @@
                 <div class="map-grid-line" style="width: 1px; height: 100%; left: 50%;"></div>
                 <div class="map-grid-line" style="width: 1px; height: 100%; left: 25%;"></div>
                 <div class="map-grid-line" style="width: 1px; height: 100%; left: 75%;"></div>
-                
-                <!-- Точки на карте будут сгенерированы динамически через JS -->
             </div>
         </section>
 
@@ -124,7 +115,7 @@
             <section class="panel">
                 <h2>Действия и Лечение</h2>
                 <button id="useMedkit" onclick="useMedkit()">🩹 Использовать аптечку</button>
-                <button id="eatFood" onclick="eatFood()">🥫 Съесть консерву (-20 голода)</button>
+                <button id="eatFood" onclick="eatFood()">🥫 Съесть консерву (-25 голода)</button>
             </section>
         </div>
 
@@ -138,3 +129,18 @@
 
         <section class="panel">
             <h2>Мастерская крафта</h2>
+            <button id="craftGun" onclick="craft('gun')">Создать карабин</button>
+            <button id="craftAmmo" onclick="craft('ammo')">Создать 5 патронов</button>
+            <button id="craftMed" onclick="craft('med')">Создать аптечку</button>
+            <button id="craftRadio" onclick="craft('radio')">⚡ Починить КВ-радиостанцию</button>
+            <p style="font-size: 13px; color: #94a3b8;">
+                Карабин: 3 металла, 2 детали | Патроны: 1 металл, 1 порох | Аптечка: 2 ткани, 1 лекарство <br>
+                Радиостанция: 5 металла, 5 деталей, 1 радиочип (можно выменять у торговца или найти на Заводе).
+            </p>
+        </section>
+
+        <section class="panel">
+            <h2>Журнал выживания</h2>
+            <div id="log"></div>
+        </section>
+    </div>
