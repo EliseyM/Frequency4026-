@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Частота 4026: Путь Домой</title>
     <style>
-        body { margin: 0; background: #101716; color: #e4eee8; font: 16px system-ui, sans-serif; }
+        body { margin: 0; background: #101716; color: #e4eee8; font: 16px system-ui, sans-serif; overflow-x: hidden; }
         main { max-width: 760px; margin: 30px auto; padding: 20px; }
         h1 { color: #a6d9ae; margin-bottom: 5px; }
         .version-tag { font-size: 12px; background: #1e3a2f; color: #5dfd7a; padding: 3px 8px; border-radius: 12px; display: inline-block; margin-bottom: 15px; border: 1px solid #355b45; }
@@ -42,16 +42,46 @@
         .map-node.active-node span { color: #5dfd7a; border: 1px solid #355b45; }
         .map-node.military-node { background: #ef4444; }
         
+        /* СТИЛИ ЗАСТАВКИ (SPLASH SCREEN) */
+        #splashScreen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #080d0c; color: #5dfd7a; font-family: monospace;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; transition: opacity 0.8s ease, transform 0.8s ease; padding: 20px; box-sizing: border-box;
+        }
+        .splash-title { font-size: 28px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 8px rgba(93, 253, 122, 0.6); margin-bottom: 5px; text-align: center; }
+        .splash-subtitle { font-size: 14px; color: #84a38e; margin-bottom: 30px; text-align: center; }
+        .terminal-box { width: 100%; max-width: 500px; background: #0c1412; border: 1px solid #1e3a2f; border-radius: 6px; padding: 15px; height: 120px; overflow: hidden; display: flex; flex-direction: column-reverse; font-size: 13px; color: #4ade80; margin-bottom: 20px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
+        .progress-bar-container { width: 100%; max-width: 500px; height: 8px; background: #13231c; border-radius: 4px; border: 1px solid #1e3a2f; overflow: hidden; }
+        .progress-bar-fill { width: 0%; height: 100%; background: #5dfd7a; box-shadow: 0 0 8px #5dfd7a; transition: width 0.1s linear; }
+        .blink { animation: splashBlink 1s infinite; }
+        @keyframes splashBlink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: 0.7; } }
     </style>
 </head>
 <body>
+
+<!-- ЗАСТАВКА ИГРЫ -->
+<div id="splashScreen">
+    <div class="splash-title">⚡ ЧАСТОТА 4026 ⚡</div>
+    <div class="splash-subtitle">Квантовый терминал связи v1.0.4 <span class="blink">■</span></div>
+    
+    <div class="terminal-box" id="splashTerminal">
+        <div>Установка связи с протоколом инициализации...</div>
+    </div>
+    
+    <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="splashProgress"></div>
+    </div>
+    <div style="font-size: 11px; color: #84a38e; margin-top: 8px;" id="progressText">Загрузка: 0%</div>
+</div>
+
 <main>
     <h1>Частота 4026: Путь Домой</h1>
     <div class="version-tag">Полная бесплатная версия • Стабильная сборка</div>
     
     <section id="modeSelection" class="panel">
-        <h2>Протокол terminal «Убежище-1»</h2>
+        <h2>Протокол терминала «Убежище-1»</h2>
         <p>Ты остался один в выжженном секторе. Твой народ ушел на восток много месяцев назад. Собери КВ-радиостанцию, выживи 15 дней и запеленгуй зашифрованную частоту, чтобы отыскать дорогу к своим людям.</p>
         <div style="margin: 15px 0;">
             <button onclick="initGame('single')">Начать Одиночную Кампанию</button>
@@ -107,40 +137,3 @@
             <section class="panel" id="locationContainer">
                 <h2>Исследование</h2>
                 <button onclick="explore('Городские руины')">🏙️ Исследовать город</button>
-                <button onclick="explore('Заброшенный завод')">🏭 Исследовать завод</button>
-                <button onclick="explore('Лесной сектор')">🌲 Исследовать лес</button>
-                <button id="marchBtn" class="hidden" onclick="marchEast()" style="background: #a855f7 !important;">🥾 Сделать марш-бросок на Восток</button>
-            </section>
-
-            <section class="panel">
-                <h2>Действия и Лечение</h2>
-                <button id="useMedkit" onclick="useMedkit()">🩹 Использовать аптечку</button>
-                <button id="eatFood" onclick="eatFood()">🥫 Съесть консерву (-25 голода)</button>
-            </section>
-        </div>
-
-        <section class="panel trader-panel hidden" id="traderPanel">
-            <h2>🛒 Странствующий Торговец</h2>
-            <p>«Привет, путник. Обменяю излишки деталей или пороха на еду, патроны или редкую электронику для радиостанции».</p>
-            <button onclick="trade('buyFood')">Купить Еду (1 деталь → 2 консервы)</button>
-            <button onclick="trade('buyRadioPart')">Купить Модуль Частоты (4 детали → 1 чип)</button>
-            <button onclick="trade('buyAmmo')">Купить Патроны (2 пороха → 5 патронов)</button>
-        </section>
-
-        <section class="panel">
-            <h2>Мастерская крафта</h2>
-            <button id="craftGun" onclick="craft('gun')">Создать карабин</button>
-            <button id="craftAmmo" onclick="craft('ammo')">Создать 5 патронов</button>
-            <button id="craftMed" onclick="craft('med')">Создать аптечку</button>
-            <button id="craftRadio" onclick="craft('radio')">⚡ Починить КВ-радиостанцию</button>
-            <p style="font-size: 13px; color: #94a3b8;">
-                Карабин: 3 металла, 2 детали | Патроны: 1 metal, 1 порох | Аптечка: 2 ткани, 1 лекарство <br>
-                Радиостанция: 5 металла, 5 деталей, 1 радиочип (можно выменять у торговца или найти на Заводe).
-            </p>
-        </section>
-
-        <section class="panel">
-            <h2>Журнал выживания</h2>
-            <div id="log"></div>
-        </section>
-    </div>
