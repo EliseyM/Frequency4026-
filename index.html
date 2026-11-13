@@ -5,332 +5,346 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Частота 4026: Путь Домой</title>
     <style>
-        body { margin: 0; background: #101716; color: #e4eee8; font: 16px system-ui, sans-serif; overflow-x: hidden; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #101716;
+            color: #e4eee8;
+            font: 16px system-ui, sans-serif;
+        }
         main { max-width: 760px; margin: 30px auto; padding: 20px; }
         h1 { color: #a6d9ae; margin-bottom: 5px; }
-        .version-tag { font-size: 12px; background: #1e3a2f; color: #5dfd7a; padding: 3px 8px; border-radius: 12px; display: inline-block; margin-bottom: 15px; border: 1px solid #355b45; }
-        .panel { background: #1b2622; border: 1px solid #394a40; border-radius: 10px; padding: 16px; margin: 14px 0; }
-        button { margin: 5px; padding: 10px 14px; background: #355b45; color: white; border: 0; border-radius: 6px; cursor: pointer; }
+        h2 { font-size: 20px; }
+        button {
+            margin: 5px;
+            padding: 10px 14px;
+            background: #355b45;
+            color: white;
+            border: 0;
+            border-radius: 6px;
+            cursor: pointer;
+        }
         button:hover { background: #477958; }
-        button:disabled { background: #444; cursor: not-allowed; color: #888; }
-        #log { height: 180px; overflow-y: auto; line-height: 1.5; white-space: pre-line; }
-        .stats { color: #c7d6cc; }
-        .hunger-warning { color: #f59e0b; font-weight: bold; }
-        .misfire-warning { color: #f43f5e; font-weight: bold; }
-        .radio-active { color: #a855f7; font-weight: bold; }
+        button:disabled { background: #444; cursor: not-allowed; color: #aaa; }
+        .version-tag {
+            font-size: 12px;
+            background: #1e3a2f;
+            color: #5dfd7a;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 15px;
+            border: 1px solid #355b45;
+        }
+        .panel {
+            background: #1b2622;
+            border: 1px solid #394a40;
+            border-radius: 10px;
+            padding: 16px;
+            margin: 14px 0;
+        }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .hidden { display: none !important; }
-        .campaign-objective { background: #242116; border: 1px solid #56481c; color: #fbe69d; padding: 10px; border-radius: 6px; margin-bottom: 12px; }
-        .trader-panel { background: #221b21; border: 1px solid #5b3554; border-radius: 10px; padding: 16px; margin: 14px 0; color: #fbcfe8; }
-        .trader-panel button { background: #5b3552; }
-        .trader-panel button:hover { background: #734568; }
-        #locationContainer button { background: #2a4c38; }
-        #locationContainer button:hover { background: #37644a; }
+        .stats { color: #c7d6cc; }
+        .campaign-objective {
+            background: #242116;
+            border: 1px solid #56481c;
+            color: #fbe69d;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
         .day-indicator { color: #f59e0b; font-weight: bold; }
         .night-indicator { color: #818cf8; font-weight: bold; }
-        .distance-tracker { background: #1e293b; border: 1px solid #475569; color: #38bdf8; padding: 10px; border-radius: 6px; font-weight: bold; margin-bottom: 10px; }
-        .boss-panel { background: #450a0a; border: 2px solid #ef4444; border-radius: 10px; padding: 16px; margin: 14px 0; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
-        .boss-hp-bar { background: #1a0505; border: 1px solid #f43f5e; height: 20px; border-radius: 4px; overflow: hidden; margin: 10px 0; }
-        .boss-hp-fill { background: #ef4444; height: 100%; transition: width 0.3s; }
-        .map-wrapper { background: #0c1211; border: 2px solid #273b35; border-radius: 8px; height: 160px; position: relative; margin: 10px 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        .map-grid-line { position: absolute; background: rgba(53, 91, 69, 0.15); }
-        .map-node { position: absolute; width: 12px; height: 12px; background: #3a5846; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #84a38e; }
-        .map-node span { position: absolute; top: 14px; white-space: nowrap; font-weight: bold; font-family: monospace; background: rgba(16, 23, 22, 0.8); padding: 1px 4px; border-radius: 3px; }
-        .map-node.active-node { background: #5dfd7a; box-shadow: 0 0 10px #5dfd7a; animation: pulse 1s infinite; }
-        .map-node.active-node span { color: #5dfd7a; border: 1px solid #355b45; }
+        .distance-tracker {
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: #38bdf8;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .boss-panel {
+            background: #450a0a;
+            border: 2px solid #ef4444;
+            border-radius: 10px;
+            padding: 16px;
+            margin: 14px 0;
+        }
+        .boss-hp-bar {
+            background: #1a0505;
+            border: 1px solid #f43f5e;
+            height: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .boss-hp-fill {
+            background: #ef4444;
+            height: 100%;
+            transition: width .3s;
+        }
+        .trader-panel {
+            background: #221b21;
+            border: 1px solid #5b3554;
+            border-radius: 10px;
+            padding: 16px;
+            margin: 14px 0;
+            color: #fbcfe8;
+        }
+        .trader-panel button { background: #5b3552; }
+        .trader-panel button:hover { background: #734568; }
+        .map-wrapper {
+            background: #0c1211;
+            border: 2px solid #273b35;
+            border-radius: 8px;
+            height: 160px;
+            position: relative;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .map-grid-line { position: absolute; background: rgba(53, 91, 69, .3); }
+        .map-node {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #3a5846;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .map-node span {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font: bold 11px monospace;
+            color: #84a38e;
+            background: rgba(16, 23, 22, .9);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .map-node.active-node {
+            background: #5dfd7a;
+            box-shadow: 0 0 10px #5dfd7a;
+        }
         .map-node.military-node { background: #ef4444; }
-        #splashScreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #080d0c; color: #5dfd7a; font-family: monospace; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease, transform 0.8s ease; padding: 20px; box-sizing: border-box; }
-        .splash-title { font-size: 28px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 8px rgba(93, 253, 122, 0.6); margin-bottom: 5px; text-align: center; }
-        .splash-subtitle { font-size: 14px; color: #84a38e; margin-bottom: 30px; text-align: center; }
-        .terminal-box { width: 100%; max-width: 500px; background: #0c1412; border: 1px solid #1e3a2f; border-radius: 6px; padding: 15px; height: 120px; overflow: hidden; display: flex; flex-direction: column-reverse; font-size: 13px; color: #4ade80; margin-bottom: 20px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
-        .progress-bar-container { width: 100%; max-width: 500px; height: 8px; background: #13231c; border-radius: 4px; border: 1px solid #1e3a2f; overflow: hidden; }
-        .progress-bar-fill { width: 0%; height: 100%; background: #5dfd7a; box-shadow: 0 0 8px #5dfd7a; transition: width 0.1s linear; }
-        .blink { animation: splashBlink 1s infinite; }
-        @keyframes splashBlink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: 0.7; } }
+        #log {
+            height: 180px;
+            overflow-y: auto;
+            line-height: 1.5;
+            white-space: pre-line;
+            font-size: 14px;
+        }
+        #splashScreen {
+            position: fixed;
+            inset: 0;
+            background: #080d0c;
+            color: #5dfd7a;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity .8s ease;
+            padding: 20px;
+        }
+        .splash-title {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+        .splash-subtitle { color: #84a38e; margin: 8px 0 25px; text-align: center; }
+        .terminal-box {
+            width: 100%;
+            max-width: 500px;
+            background: #0c1412;
+            border: 1px solid #1e3a2f;
+            border-radius: 6px;
+            padding: 15px;
+            height: 120px;
+            overflow: hidden;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .progress-bar-container {
+            width: 100%;
+            max-width: 500px;
+            height: 8px;
+            background: #13231c;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            width: 0;
+            height: 100%;
+            background: #5dfd7a;
+            transition: width .1s linear;
+        }
+        @media (max-width: 600px) {
+            main { margin: 10px auto; padding: 12px; }
+            .grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 <div id="splashScreen">
     <div class="splash-title">⚡ ЧАСТОТА 4026 ⚡</div>
-    <div class="splash-subtitle">Квантовый терминал связи v1.0.4 <span class="blink">■</span></div>
-    <div class="terminal-box" id="splashTerminal"><div>Установка связи с протоколом инициализации...</div></div>
-    <div class="progress-bar-container"><div class="progress-bar-fill" id="splashProgress"></div></div>
-    <div style="font-size: 11px; color: #84a38e; margin-top: 8px;" id="progressText">Загрузка: 0%</div>
+    <div class="splash-subtitle">Квантовый терминал связи v1.0.4</div>
+    <div class="terminal-box" id="splashTerminal">> Установка связи...</div>
+    <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="splashProgress"></div>
+    </div>
+    <div id="progressText" style="font-size:11px;color:#84a38e;margin-top:8px">
+        Загрузка: 0%
+    </div>
 </div>
+
 <main>
     <h1>Частота 4026: Путь Домой</h1>
     <div class="version-tag">Полная бесплатная версия • Стабильная сборка</div>
+
     <section id="modeSelection" class="panel">
         <h2>Протокол терминала «Убежище-1»</h2>
-        <p>Ты остался один в выжженном секторе. Твой народ ушел на восток много месяцев назад. Собери КВ-радиостанцию, выживи 15 дней и запеленгуй зашифрованную частоту, чтобы отыскать дорогу к своим людям.</p>
-        <div style="margin: 15px 0;">
-            <button onclick="initGame('single')">Начать Одиночную Кампанию</button>
-            <button id="multiBtn" onclick="initGame('multi')" style="background: #27272a;" disabled>Начать Великий Поход к Народу (Заблокировано 🔒)</button>
-            <button id="loadBtn" onclick="loadGame()" style="background: #1e293b; border: 1px solid #38bdf8; display: none;">🔄 Продолжить поход</button>
-        </div>
-        <button onclick="clearSaveData()" style="background: #7f1d1d; font-size: 12px; padding: 6px 10px;">Стереть данные памяти (Начать заново)</button>
+        <p>
+            Ты остался один в выжженном секторе. Твой народ ушёл на восток.
+            Собери КВ-радиостанцию, выживи 15 дней и найди дорогу к своим людям.
+        </p>
+        <button onclick="initGame()">Начать кампанию</button>
+        <button id="loadBtn" onclick="loadGame()" class="hidden"
+                style="background:#1e293b">🔄 Продолжить поход</button>
+        <button onclick="clearSaveData()" style="background:#7f1d1d">
+            Стереть сохранение
+        </button>
     </section>
+
     <div id="gameInterface" class="hidden">
-        <div id="campaignPanel" class="campaign-objective">
-            <b>Текущая задача:</b> <span id="objectiveText">Почини радиостанцию в мастерской, чтобы слушать эфир! Выживи до 15-го дня и найди свой народ.</span>
+        <div class="campaign-objective">
+            <b>Текущая задача:</b> <span id="objectiveText"></span>
         </div>
-        <div id="distanceTracker" class="distance-tracker hidden">📍 Осталось пройти до лагеря твоего народа: <span id="distanceValue">1000</span> км</div>
+
+        <div id="distanceTracker" class="distance-tracker hidden">
+            📍 Осталось до лагеря: <span id="distanceValue">1000</span> км
+        </div>
+
         <section id="bossPanel" class="boss-panel hidden">
-            <h2 style="color: #f43f5e; margin: 0;">☣️ ФИНАЛЬНАЯ СТЫЧКА: Радиоактивный Левиафан</h2>
-            <p>Огромный мутант-переросток преградил путь к лагерю. Напарники зажали его в кольцо! Скоординируй огонь!</p>
-            <div class="boss-hp-bar"><div id="bossHpFill" class="boss-hp-fill" style="width: 100%;"></div></div>
-            <p style="font-size: 14px; margin-bottom: 10px;">Здоровье чудовища: <span id="bossHpValue" style="font-weight:bold;">500</span> / 500 HP</p>
-            <button id="attackBossBtn" onclick="attackFinalBoss()" style="background: #ef4444; font-weight: bold; border: 1px solid #f43f5e;">💥 Общий залп отряда (-1 патрон)</button>
+            <h2 style="color:#f43f5e;margin-top:0">
+                ☣️ ФИНАЛЬНАЯ СТЫЧКА: Радиоактивный Левиафан
+            </h2>
+            <p>Чудовище преградило путь к лагерю. Скоординируй общий залп!</p>
+            <div class="boss-hp-bar">
+                <div id="bossHpFill" class="boss-hp-fill"></div>
+            </div>
+            <p>Здоровье чудовища: <b><span id="bossHpValue">500</span> / 500 HP</b></p>
+            <button id="attackBossBtn" onclick="attackFinalBoss()" style="background:#ef4444">
+                💥 Общий залп отряда (−1 патрон)
+            </button>
         </section>
+
         <section id="mapSection" class="panel">
-            <h2>🗺️ Монитор тактической карты</h2>
-            map-grid-line" style="width: 1px; height: 100%; left: 50%;"></div>
-                <!-- Динамические узлы карты будут генерироваться через JS -->
+            <h2>🗺️ Тактическая карта</h2>
+            <div class="map-wrapper" id="mapWrapper">
+                <div class="map-grid-line" style="width:100%;height:1px;top:50%"></div>
+                <div class="map-grid-line" style="width:1px;height:100%;left:50%"></div>
             </div>
         </section>
 
         <div class="grid">
             <section class="panel stats">
                 <h2>📊 Статус терминала</h2>
-                <div>Ресурсы: <b id="scrapText">0</b> ⚙️ Лом | <b id="ammoText">5</b> 🎒 Патроны</div>
-                <div>Жизнеобеспечение: <b id="foodText">4</b> 🍞 Еда | <b id="hpText">100</b>% ❤️ Здоровье</div>
-                <div style="margin-top: 10px;">
-                    Время: <span id="timeText" class="day-indicator">День 1</span> | 
-                    Радиостанция: <b id="radioText" style="color: #f43f5e;">Сломана ❌</b>
+                <div>⚙️ Лом: <b id="scrapText">0</b> |
+                    🎒 Патроны: <b id="ammoText">0</b></div>
+                <div>🍞 Еда: <b id="foodText">0</b> |
+                    ❤️ Здоровье: <b id="hpText">0</b>%</div>
+                <div style="margin-top:10px">
+                    Время: <span id="timeText" class="day-indicator"></span> |
+                    Радиостанция: <b id="radioText"></b>
                 </div>
             </section>
 
             <section class="panel">
                 <h2>🛠️ Доступные действия</h2>
                 <div id="actionButtons">
-                    <button id="scavengeBtn" onclick="doAction('scavenge')">🔍 Вылазка за ломом</button>
-                    <button id="huntBtn" onclick="doAction('hunt')">🌲 Охота (Использовать патрон)</button>
-                    <button id="repairRadioBtn" onclick="doAction('repair')">⚙️ Чинить радио (10 лома)</button>
-                    <button id="sleepBtn" onclick="doAction('sleep')">💤 Лечь спать (Завершить день)</button>
+                    <button onclick="doAction('scavenge')">🔍 Вылазка за ломом</button>
+                    <button onclick="doAction('hunt')">🌲 Охота (−1 патрон)</button>
+                    <button id="repairRadioBtn" onclick="doAction('repair')">
+                        ⚙️ Починить радио (10 лома)
+                    </button>
+                    <button onclick="doAction('sleep')">💤 Завершить день</button>
                 </div>
             </section>
         </div>
 
         <section id="locationContainer" class="panel hidden">
-            <h2>📍 Доступные сектора для зачистки</h2>
+            <h2>📍 Секторы на маршруте</h2>
             <div id="locationButtons"></div>
         </section>
 
         <section id="traderPanel" class="trader-panel hidden">
-            <h2>🛒 Странствующий торговец (Только днем)</h2>
-            <p>«Принес немного припасов из дальних бункеров. Обменяемся?»</p>
-            <button onclick="trade('buy_ammo')">Купить патрон (3 лома)</button>
-            <button onclick="trade('buy_food')">Купить еду (2 лома)</button>
-            <button onclick="trade('sell_scrap')">Продать 5 лома (Получить 1 еду, 1 патрон)</button>
+            <h2>🛒 Странствующий торговец</h2>
+            <p>«Припасов немного. Обменяемся?»</p>
+            <button onclick="trade('ammo')">Купить патрон (3 лома)</button>
+            <button onclick="trade('food')">Купить еду (2 лома)</button>
+            <button onclick="trade('sell')">Продать 5 лома (еда и патрон)</button>
         </section>
 
-                <section id="mapSection" class="panel">
-            <h2>🗺️ Монитор тактической карты</h2>
-            <div class="map-wrapper">
-                <div class="map-grid-line" style="width: 100%; height: 1px; top: 50%;"></div>
-                <div class="map-grid-line" style="width: 1px; height: 100%; left: 50%;"></div>
-                <!-- Динамические узлы карты будут генерироваться через JS -->
-            </div>
+        <section class="panel">
+            <h2>📻 Журнал событий</h2>
+            <div id="log"></div>
         </section>
 
+        <button onclick="saveGame()">💾 Сохранить игру</button>
+        <button onclick="returnToMenu()">В меню</button>
+    </div>
+</main>
 
 <script>
-    // Игровое состояние
-    let state = {
-        mode: 'single',
-        day: 1,
-        isNight: false,
-        scrap: 5,
-        ammo: 6,
-        food: 4,
-        hp: 100,
-        radioRepaired: false,
-        phase: 1, // 1: Выживание, 2: Великий Поход, 3: Финал (Босс)
-        distance: 1000,
-        bossHp: 500,
-        currentNode: 0
-    };
+    const SAVE_KEY = 'freq4026_save';
 
-    // Конфигурация карты (Узлы)
+    let state = createNewState();
+
     const mapNodes = [
-        { id: 0, name: "Мастерская", x: 15, y: 50, type: "safe" },
-        { id: 1, name: "Старая заправка", x: 35, y: 30, type: "normal" },
-        { id: 2, name: "Заброшенный Бункер", x: 55, y: 70, type: "normal" },
-        { id: 3, name: "Военный Склад", x: 80, y: 45, type: "military" }
+        { id: 0, name: 'Мастерская', x: 15, y: 50, type: 'safe' },
+        { id: 1, name: 'Старая заправка', x: 38, y: 28, type: 'normal' },
+        { id: 2, name: 'Заброшенный бункер', x: 60, y: 70, type: 'normal' },
+        { id: 3, name: 'Военный склад', x: 83, y: 43, type: 'military' }
     ];
 
-    // Инициализация заставки (Splash Screen)
+    function createNewState() {
+        return {
+            day: 1,
+            isNight: false,
+            scrap: 5,
+            ammo: 6,
+            food: 4,
+            hp: 100,
+            radioRepaired: false,
+            phase: 1,
+            distance: 1000,
+            bossHp: 500,
+            currentNode: 0,
+            gameOver: false,
+            won: false
+        };
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
-        const splash = document.getElementById('splashScreen');
-        const progressFill = document.getElementById('splashProgress');
-        const progressText = document.getElementById('progressText');
-        const terminal = document.getElementById('splashTerminal');
-        
         const logs = [
-            "Авторизация в сети Частота 4026...",
-            "Проверка систем жизнеобеспечения... ОК",
-            "Синхронизация с тактической картой сектора...",
-            "Калибровка КВ-приемника... Частота заблокирована.",
-            "Система готова к запуску."
+            'Авторизация в сети Частота 4026...',
+            'Проверка систем жизнеобеспечения... ОК',
+            'Синхронизация тактической карты...',
+            'Калибровка КВ-приёмника...',
+            'Система готова к запуску.'
         ];
-        
+
         let progress = 0;
         let logIndex = 0;
-        
-        const interval = setInterval(() => {
-            progress += Math.floor(Math.random() * 8) + 4;
-            if (progress > 100) progress = 100;
-            
-            progressFill.style.width = progress + '%';
-            progressText.innerText = `Загрузка: ${progress}%`;
-            
-            if (progress >= logIndex * 20 && logIndex < logs.length) {
-                const logLine = document.createElement('div');
-                logLine.innerText = `> ${logs[logIndex]}`;
-                terminal.appendChild(logLine);
-                logIndex++;
-            }
-            
-            if (progress === 100) {
-                clearInterval(interval);
-                setTimeout(() => {
-                    splash.style.opacity = '0';
-                    splash.style.transform = 'scale(1.05)';
-                    setTimeout(() => splash.classList.add('hidden'), 800);
-                }, 400);
-            }
-        }, 80);
+        const timer = setInterval(() => {
+            progress = Math.min(100, progress + Math.floor(Math.random() * 9) + 5);
+            document.getElementById('splashProgress').style.width = progress + '%';
+            document.getElementById('progress
 
-        // Проверяем наличие сохранений
-        if (localStorage.getItem('freq4026_save')) {
-            document.getElementById('loadBtn').style.display = 'inline-block';
-        }
-    });
-
-    function addLog(text, className = '') {
-        const log = document.getElementById('log');
-        const span = document.createElement('div');
-        if (className) span.className = className;
-        span.innerHTML = `[День ${state.day} | ${state.isNight ? 'Ночь' : 'День'}] ${text}`;
-        log.appendChild(span);
-        log.scrollTop = log.scrollHeight;
-    }
-
-    function updateUI() {
-        document.getElementById('scrapText').innerText = state.scrap;
-        document.getElementById('ammoText').innerText = state.ammo;
-        document.getElementById('foodText').innerText = state.food;
-        document.getElementById('hpText').innerText = state.hp;
-        
-        const timeEl = document.getElementById('timeText');
-        timeEl.innerText = `${state.isNight ? 'Ночь' : 'День'} ${state.day}`;
-        timeEl.className = state.isNight ? 'night-indicator' : 'day-indicator';
-        
-        const radioEl = document.getElementById('radioText');
-        if (state.radioRepaired) {
-            radioEl.innerText = "Стабильно 📡";
-            radioEl.style.color = "#5dfd7a";
-            document.getElementById('repairRadioBtn').disabled = true;
-        } else {
-            radioEl.innerText = "Сломана ❌";
-            radioEl.style.color = "#f43f5e";
-            document.getElementById('repairRadioBtn').disabled = false;
-        }
-
-        // Управление фазами
-        if (state.phase === 1) {
-            document.getElementById('objectiveText').innerText = state.radioRepaired 
-                ? "Выживай до 15-го дня. Собирай ресурсы и патроны, радиопеленг активен!" 
-                : "Почини радиостанцию в мастерской (10 лома), чтобы слушать эфир и копить силы!";
-        } else if (state.phase === 2) {
-            document.getElementById('distanceTracker').classList.remove('hidden');
-            document.getElementById('distanceValue').innerText = state.distance;
-            document.getElementById('objectiveText').innerText = "Вы в пути к Народу! Прокладывайте маршрут через опасные зоны.";
-            document.getElementById('locationContainer').classList.remove('hidden');
-        } else if (state.phase === 3) {
-            document.getElementById('bossPanel').classList.remove('hidden');
-            document.getElementById('locationContainer').classList.add('hidden');
-            document.getElementById('actionButtons').classList.add('hidden');
-            document.getElementById('objectiveText').innerText = "☣️ УБЕЙТЕ ЛЕВИАФАНА ДЛЯ ПОБЕДЫ В КАМПАНИИ!";
-            document.getElementById('bossHpFill').style.width = `${(state.bossHp / 500) * 100}%`;
-            document.getElementById('bossHpValue').innerText = state.bossHp;
-        }
-
-        renderMap();
-        saveGame();
-    }
-
-    function renderMap() {
-        const map = document.getElementById('tacticalMap');
-        // Очищаем старые узлы, оставляя только сетку
-        const lines = map.querySelectorAll('.map-grid-line');
-        map.innerHTML = '';
-        lines.forEach(l => map.appendChild(l));
-
-        mapNodes.forEach(node => {
-            const nodeEl = document.createElement('div');
-            nodeEl.className = `map-node ${node.id === state.currentNode ? 'active-node' : ''} ${node.type === 'military' ? 'military-node' : ''}`;
-            nodeEl.style.left = `${node.x}%`;
-            nodeEl.style.top = `${node.y}%`;
-            
-            const label = document.createElement('span');
-            label.innerText = node.name;
-            nodeEl.appendChild(label);
-            map.appendChild(nodeEl);
-        });
-
-        // Кнопки переходов для Фазы 2
-        const locButtons = document.getElementById('locationButtons');
-        locButtons.innerHTML = '';
-        mapNodes.forEach(node => {
-            if (node.id !== state.currentNode) {
-                const btn = document.createElement('button');
-                btn.innerText = `Идти в: ${node.name} (-50 км)`;
-                btn.onclick = () => travelToNode(node.id);
-                locButtons.appendChild(btn);
-            }
-        });
-    }
-
-    function initGame(mode) {
-        state.mode = mode;
-        document.getElementById('modeSelection').classList.add('hidden');
-        document.getElementById('gameInterface').classList.remove('hidden');
-        addLog("Кампания началась. Сектор пуст, датчики фиксируют радиомолчание.", "radio-active");
-        updateUI();
-    }
-
-    function doAction(action) {
-        if (state.hp <= 0) return addLog("Вы мертвы. Начните новую игру.", "misfire-warning");
-
-        if (action === 'scavenge') {
-            let found = Math.floor(Math.random() * 4) + 2;
-            state.scrap += found;
-            addLog(`Вы провели вылазку вокруг убежища и нашли +${found} ед. металлолома.`);
-            
-            // Случайное событие торговца днем
-            if (!state.isNight && Math.random() > 0.6) {
-                document.getElementById('traderPanel').classList.remove('hidden');
-                addLog("В лагерь забрел странствующий торговец!", "radio-active");
-            } else {
-                document.getElementById('traderPanel').classList.add('hidden');
-            }
-        } 
-
-            </div>
-        </section>
-        <section id="radioPanel" class="panel hidden">
-            <h3>📡 Модуль коротковолновой связи</h3>
-            <p>Текущая частота настройки: <span id="radioFreqValue" style="color: #5dfd7a; font-weight: bold; font-family: monospace;">40.00</span> MHz</p>
-            <button onclick="tuneRadio(-0.05)">-0.05 MHz</button><button onclick="tuneRadio(0.05)">+0.05 MHz</button>
-            <button id="scanRadioBtn" onclick="scanAirwaves()" style="background: #6b21a8;">Сканировать частоту</button>
-            <div id="radioInterceptText" style="margin-top: 10px; color: #a6d9ae; font-style: italic; background: #131b18; padding: 8px; border-radius: 4px;">Эфир пуст. Слышны только статические помехи.</div>
-        </section>
-        <section class="panel stats" id="stats"></section>
-        <div class="grid">
-            <section class="panel" id="locationContainer">
-                <h2>Исследование</h2>
-                <button onclick="explore('Городские руины')">🏙️ Исследовать город</button>
-                <button onclick="explore('Заброшенный завод')">🏭 Исследовать завод</button>
-                <button onclick="explore('Лесной сектор')">🌲 Исследовать лес</button>
+*(This answer reached its length limit. Send “continue” to get the rest.)*
