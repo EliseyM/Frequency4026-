@@ -3,237 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Последний человек — 4026</title>
+    <title>Частота 4026: Путь Домой</title>
     <style>
-        body {
-            margin: 0;
-            background: #101716;
-            color: #e4eee8;
-            font: 16px system-ui, sans-serif;
-        }
-        main {
-            max-width: 760px;
-            margin: 30px auto;
-            padding: 20px;
-        }
-        h1 {
-            color: #a6d9ae;
-        }
-        .panel {
-            background: #1b2622;
-            border: 1px solid #394a40;
-            border-radius: 10px;
-            padding: 16px;
-            margin: 14px 0;
-        }
-        button {
-            margin: 5px;
-            padding: 10px 14px;
-            background: #355b45;
-            color: white;
-            border: 0;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #477958;
-        }
-        button:disabled {
-            background: #444;
-            color: #888;
-            cursor: not-allowed;
-        }
-        #log {
-            height: 220px;
-            overflow-y: auto;
-            line-height: 1.5;
-            white-space: pre-line;
-            border-top: 1px solid #394a40;
-            padding-top: 10px;
-        }
-        .stats {
-            color: #c7d6cc;
-            line-height: 1.6;
-        }
-        .danger {
-            color: #ff8787;
-        }
-        .success {
-            color: #a6d9ae;
-        }
+        body { margin: 0; background: #101716; color: #e4eee8; font: 16px system-ui, sans-serif; }
+        main { max-width: 760px; margin: 30px auto; padding: 20px; }
+        h1 { color: #a6d9ae; margin-bottom: 5px; }
+        .version-tag { font-size: 12px; background: #1e3a2f; color: #5dfd7a; padding: 3px 8px; border-radius: 12px; display: inline-block; margin-bottom: 15px; border: 1px solid #355b45; }
+        .panel { background: #1b2622; border: 1px solid #394a40; border-radius: 10px; padding: 16px; margin: 14px 0; }
+        button { margin: 5px; padding: 10px 14px; background: #355b45; color: white; border: 0; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #477958; }
+        button:disabled { background: #444; cursor: not-allowed; color: #888; }
+        #log { height: 180px; overflow-y: auto; line-height: 1.5; white-space: pre-line; }
+        .stats { color: #c7d6cc; }
+        .weight-warning { color: #ff8b8b; font-weight: bold; }
+        .hunger-warning { color: #f59e0b; font-weight: bold; }
+        .misfire-warning { color: #f43f5e; font-weight: bold; }
+        .radio-active { color: #a855f7; font-weight: bold; }
+        .mutant-warning-text { color: #ef4444; font-weight: bold; animation: pulse 2s infinite; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .hidden { display: none !important; }
+        .friend-item { display: flex; justify-content: space-between; align-items: center; background: #131b18; padding: 8px; margin: 5px 0; border-radius: 4px; border-left: 3px solid #b676ff; }
+        .campaign-objective { background: #242116; border: 1px solid #56481c; color: #fbe69d; padding: 10px; border-radius: 6px; margin-bottom: 12px; }
+        .mission-panel { background: #1c2d3a; border: 1px solid #31526d; color: #93c5fd; }
+        .mission-panel button { background: #2563eb; }
+        .mission-panel button:hover { background: #3b82f6; }
+        .trader-panel { background: #221b21; border: 1px solid #5b3554; border-radius: 10px; padding: 16px; margin: 14px 0; color: #fbcfe8; }
+        .trader-panel button { background: #5b3552; }
+        .trader-panel button:hover { background: #734568; }
+        #locationContainer button { background: #2a4c38; }
+        #locationContainer button:hover { background: #37644a; }
+        .day-indicator { color: #f59e0b; font-weight: bold; }
+        .night-indicator { color: #818cf8; font-weight: bold; }
+        .distance-tracker { background: #1e293b; border: 1px solid #475569; color: #38bdf8; padding: 10px; border-radius: 6px; font-weight: bold; margin-bottom: 10px; }
+        
+        .boss-panel { background: #450a0a; border: 2px solid #ef4444; border-radius: 10px; padding: 16px; margin: 14px 0; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        .boss-hp-bar { background: #1a0505; border: 1px solid #f43f5e; height: 20px; border-radius: 4px; overflow: hidden; margin: 10px 0; }
+        .boss-hp-fill { background: #ef4444; height: 100%; transition: width 0.3s; }
+
+        .map-wrapper { background: #0c1211; border: 2px solid #273b35; border-radius: 8px; height: 160px; position: relative; margin: 10px 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .map-grid-line { position: absolute; background: rgba(53, 91, 69, 0.15); }
+        .map-node { position: absolute; width: 12px; height: 12px; background: #3a5846; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #84a38e; }
+        .map-node span { position: absolute; top: 14px; white-space: nowrap; font-weight: bold; font-family: monospace; background: rgba(16, 23, 22, 0.8); padding: 1px 4px; border-radius: 3px; }
+        .map-node.active-node { background: #5dfd7a; box-shadow: 0 0 10px #5dfd7a; animation: pulse 1s infinite; }
+        .map-node.active-node span { color: #5dfd7a; border: 1px solid #355b45; }
+        .map-node.military-node { background: #ef4444; }
+        
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: 0.7; } }
     </style>
 </head>
 <body>
 <main>
-    <h1>Последний человек: 4026</h1>
-    <p>Цивилизация исчезла. Ты — последний человек на Земле. Исследуй руины, собирай припасы и готовься к неизвестному.</p>
+    <h1>Частота 4026: Путь Домой</h1>
+    <div class="version-tag">Полная бесплатная версия • Стабильная сборка</div>
     
-    <section class="panel stats" id="stats"></section>
-
-    <section class="panel">
-        <h2>Действия</h2>
-        <button id="useMedkit" onclick="useMedkit()">Использовать аптечку (+30 Здоровья)</button>
+    <section id="modeSelection" class="panel">
+        <h2>Протокол терминала «Убежище-1»</h2>
+        <p>Ты остался один в выжженном секторе. Твой народ ушел на восток много месяцев назад. Собери КВ-радиостанцию, выживи 15 дней и запеленгуй зашифрованную частоту, чтобы отыскать дорогу к своим людям.</p>
+        <div style="margin: 15px 0;">
+            <button onclick="initGame('single')">Начать Одиночную Кампанию</button>
+            <button id="multiBtn" onclick="initGame('multi')" style="background: #27272a;">Начать Великий Поход к Народу (Заблокировано 🔒)</button>
+            <button id="loadBtn" onclick="loadGame()" style="background: #1e293b; border: 1px solid #38bdf8; display: none;">🔄 Продолжить поход</button>
+        </div>
+        <button onclick="clearSaveData()" style="background: #7f1d1d; font-size: 12px; padding: 6px 10px;">Стереть данные памяти (Начать заново)</button>
     </section>
 
-    <section class="panel">
-        <h2>Исследование</h2>
-        <p><small>*В городе чаще ресурсы, на заводе — металл/детали, в лесу — лекарства/ткань.</small></p>
-        <button onclick="explore('Городские руины')">Исследовать город</button>
-        <button onclick="explore('Заброшенный завод')">Исследовать завод</button>
-        <button onclick="explore('Лесной сектор')">Исследовать лес</button>
-    </section>
+    <div id="gameInterface" class="hidden">
+        <div id="campaignPanel" class="campaign-objective">
+            <b>Текущая задача:</b> <span id="objectiveText">Почини радиостанцию в мастерской, чтобы слушать эфир! Выживи до 15-го дня и найди свой народ.</span>
+            <div id="mutantRadar" style="margin-top: 5px; color: #fb923c;"></div>
+        </div>
 
-    <section class="panel">
-        <h2>Мастерская</h2>
-        <button id="craftGun" onclick="craft('gun')">Создать карабин</button>
-        <button id="craftAmmo" onclick="craft('ammo')">Создать 5 патронов</button>
-        <button id="craftMed" onclick="craft('med')">Создать аптечку</button>
-        <p><small>Карабин: 3 металла, 2 детали. Патроны: 1 металл, 1 порох. Аптечка: 2 ткани, 1 лекарство.</small></p>
-    </section>
+        <div id="distanceTracker" class="distance-tracker hidden">
+            📍 Осталось пройти до лагеря твоего народа: <span id="distanceValue">1000</span> км
+        </div>
 
-    <section class="panel">
-        <h2>Журнал</h2>
-        <div id="log"></div>
-    </section>
-</main>
+        <section id="bossPanel" class="boss-panel hidden">
+            <h2 style="color: #f43f5e; margin: 0;">☣️ ФИНАЛЬНАЯ СТЫЧКА: Радиоактивный Левиафан</h2>
+            <p>Огромный мутант-переросток преградил путь к лагерю. Напарники зажали его в кольцо! Скоординируй огонь!</p>
+            <div class="boss-hp-bar">
+                <div id="bossHpFill" class="boss-hp-fill" style="width: 100%;"></div>
+            </div>
+            <p style="font-size: 14px; margin-bottom: 10px;">Здоровье чудовища: <span id="bossHpValue" style="font-weight:bold;">500</span> / 500 HP</p>
+            <button id="attackBossBtn" onclick="attackFinalBoss()" style="background: #ef4444; font-weight: bold; border: 1px solid #f43f5e;">💥 Координировать общий залп отряда (-1 патрон)</button>
+        </section>
 
-<script>
-    const state = {
-        day: 1,
-        health: 100,
-        location: "Убежище",
-        inventory: {
-            metal: 2,
-            parts: 0,
-            powder: 0,
-            cloth: 0,
-            medicine: 0,
-            ammo: 0,
-            gun: false,
-            medkits: 0
-        }
-    };
+        <section id="mapSection" class="panel">
+            <h2>🗺️ Монитор тактической карты</h2>
+            <div class="map-wrapper" id="tacticalMap">
+                <div class="map-grid-line" style="width: 100%; height: 1px; top: 50%;"></div>
+                <div class="map-grid-line" style="width: 100%; height: 1px; top: 25%;"></div>
+                <div class="map-grid-line" style="width: 100%; height: 1px; top: 75%;"></div>
+                <div class="map-grid-line" style="width: 1px; height: 100%; left: 50%;"></div>
+                <div class="map-grid-line" style="width: 1px; height: 100%; left: 25%;"></div>
+                <div class="map-grid-line" style="width: 1px; height: 100%; left: 75%;"></div>
+                
+                <!-- Точки на карте будут сгенерированы динамически через JS -->
+            </div>
+        </section>
 
-    const names = {
-        metal: "металл",
-        parts: "детали",
-        powder: "порох",
-        cloth: "ткань",
-        medicine: "лекарство",
-        ammo: "патроны",
-        medkits: "аптечки"
-    };
+        <section id="radioPanel" class="panel hidden">
+            <h3>📡 Модуль коротковолновой связи</h3>
+            <p>Текущая частота настройки: <span id="radioFreqValue" style="color: #5dfd7a; font-weight: bold; font-family: monospace;">40.00</span> MHz</p>
+            <button onclick="tuneRadio(-0.05)">-0.05 MHz</button>
+            <button onclick="tuneRadio(0.05)">+0.05 MHz</button>
+            <button id="scanRadioBtn" onclick="scanAirwaves()" style="background: #6b21a8;">Сканировать частоту</button>
+            <div id="radioInterceptText" style="margin-top: 10px; color: #a6d9ae; font-style: italic; background: #131b18; padding: 8px; border-radius: 4px;">Эфир пуст. Слышны только статические помехи.</div>
+        </section>
 
-    function message(text) {
-        const log = document.getElementById("log");
-        log.innerHTML = `<div><b>День ${state.day}:</b> ${text}</div>` + log.innerHTML;
-    }
+        <section class="panel stats" id="stats"></section>
 
-    function update() {
-        const i = state.inventory;
-        
-        // Обновление панели параметров
-        document.getElementById("stats").innerHTML = `
-            <b>День:</b> ${state.day} &nbsp; <b>Место:</b> ${state.location} &nbsp; 
-            <b>Здоровье:</b> <span class="${state.health < 30 ? 'danger' : ''}">${state.health}%</span><br>
-            <b>Ресурсы:</b> металл ×${i.metal}, детали ×${i.parts}, порох ×${i.powder}, ткань ×${i.cloth}, лекарства ×${i.medicine}<br>
-            <b>Снаряжение:</b> ${i.gun ? "🔫 самодельный карабин" : "оружия нет"}, патроны ×${i.ammo}, аптечки ×${i.medkits}
-        `;
+        <div class="grid">
+            <section class="panel" id="locationContainer">
+                <h2>Исследование</h2>
+                <button onclick="explore('Городские руины')">🏙️ Исследовать город</button>
+                <button onclick="explore('Заброшенный завод')">🏭 Исследовать завод</button>
+                <button onclick="explore('Лесной сектор')">🌲 Исследовать лес</button>
+                <button id="marchBtn" class="hidden" onclick="marchEast()" style="background: #a855f7 !important;">🥾 Сделать марш-бросок на Восток</button>
+            </section>
 
-        // Управление доступностью кнопок крафта и лечения
-        document.getElementById("craftGun").disabled = i.gun || i.metal < 3 || i.parts < 2;
-        document.getElementById("craftAmmo").disabled = i.metal < 1 || i.powder < 1;
-        document.getElementById("craftMed").disabled = i.cloth < 2 || i.medicine < 1;
-        document.getElementById("useMedkit").disabled = i.medkits <= 0 || state.health >= 100 || state.health <= 0;
-    }
+            <section class="panel">
+                <h2>Действия и Лечение</h2>
+                <button id="useMedkit" onclick="useMedkit()">🩹 Использовать аптечку</button>
+                <button id="eatFood" onclick="eatFood()">🥫 Съесть консерву (-20 голода)</button>
+            </section>
+        </div>
 
-    function explore(place) {
-        if (state.health <= 0) {
-            message("<span class='danger'>Ты мертв. Обнови страницу, чтобы начать заново.</span>");
-            return;
-        }
+        <section class="panel trader-panel hidden" id="traderPanel">
+            <h2>🛒 Странствующий Торговец</h2>
+            <p>«Привет, путник. Обменяю излишки деталей или пороха на еду, патроны или редкую электронику для радиостанции».</p>
+            <button onclick="trade('buyFood')">Купить Еду (1 деталь → 2 консервы)</button>
+            <button onclick="trade('buyRadioPart')">Купить Модуль Частоты (4 детали → 1 чип)</button>
+            <button onclick="trade('buyAmmo')">Купить Патроны (2 пороха → 5 патронов)</button>
+        </section>
 
-        state.day++;
-        state.location = place;
-
-        // Разделение лута по локациям
-        let pool = [];
-        if (place === 'Заброшенный завод') {
-            pool = ["metal", "metal", "parts", "powder"]; // Больше железа и деталей
-        } else if (place === 'Лесной сектор') {
-            pool = ["cloth", "cloth", "medicine", "powder"]; // Больше ткани и трав/лекарств
-        } else {
-            pool = ["metal", "parts", "powder", "cloth", "medicine"]; // Город — всего понемногу
-        }
-
-        const resType = pool[Math.floor(Math.random() * pool.length)];
-        const amount = 1 + Math.floor(Math.random() * 3); // от 1 до 3 единиц
-        state.inventory[resType] += amount;
-
-        let text = `В локации "${place}" найдено: ${names[resType]} ×${amount}.`;
-
-        // Логика опасностей и защиты
-        if (Math.random() < 0.30) { // 30% шанс встретить угрозу
-            let damage = 10 + Math.floor(Math.random() * 16); // Урон от 10 до 25
-            
-            if (state.inventory.gun && state.inventory.ammo > 0) {
-                state.inventory.ammo--;
-                damage = Math.floor(damage * 0.2); // Урон снижается на 80% благодаря оружию
-                text += ` <span class='success'>💥 На тебя напали, но ты отстрелялся из карабина! Потрачен 1 патрон. Получен легкий урон: −${damage} хп.</span>`;
-            } else if (state.inventory.gun && state.inventory.ammo === 0) {
-                text += ` <span class='danger'>⚠️ На тебя напали! Карабин есть, но нет патронов! Ты получил полный урон: −${damage} хп.</span>`;
-            } else {
-                text += ` <span class='danger'>⚠️ На тебя напали безоружного! Получен тяжелый урон: −${damage} хп.</span>`;
-            }
-            
-            state.health = Math.max(0, state.health - damage);
-        } else {
-            text += " Путь оказался спокойным.";
-        }
-
-        if (state.health <= 0) {
-            text += " <span class='danger'>Урон оказался смертельным... Игра окончена.</span>";
-        }
-
-        message(text);
-        update();
-    }
-
-    function craft(item) {
-        if (state.health <= 0) return;
-        const i = state.inventory;
-
-        if (item === "gun" && !i.gun && i.metal >= 3 && i.parts >= 2) {
-            i.metal -= 3;
-            i.parts -= 2;
-            i.gun = true;
-            message("<span class='success'>Ты собрал самодельный карабин. Теперь ты готов к защите!</span>");
-        } else if (item === "ammo" && i.metal >= 1 && i.powder >= 1) {
-            i.metal -= 1;
-            i.powder -= 1;
-            i.ammo += 5;
-            message("Ты изготовил 5 патронов.");
-        } else if (item === "med" && i.cloth >= 2 && i.medicine >= 1) {
-            i.cloth -= 2;
-            i.medicine -= 1;
-            i.medkits++;
-            message("Ты изготовил аптечку.");
-        }
-        update();
-    }
-
-    function useMedkit() {
-        if (state.inventory.medkits > 0 && state.health < 100 && state.health > 0) {
-            state.inventory.medkits--;
-            state.health = Math.min(100, state.health + 30);
-            message("<span class='success'>Ты использовал аптечку и восстановил 30 единиц здоровья.</span>");
-            update();
-        }
-    }
-
-    // Инициализация игры
-    update();
-    message("Ты проснулся в убежище. На календаре — 4026 год. Нужно выжить любой ценой.");
-</script>
-</body>
-</html>
+        <section class="panel">
+            <h2>Мастерская крафта</h2>
