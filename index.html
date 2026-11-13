@@ -125,12 +125,15 @@
             <button onclick="trade('sell_scrap')">Продать 5 лома (Получить 1 еду, 1 патрон)</button>
         </section>
 
-        <section class="panel">
-            <h2>📟 Журнал терминала</h2>
-            <div id="log">Терминал готов к работе...</div>
+                <section id="mapSection" class="panel">
+            <h2>🗺️ Монитор тактической карты</h2>
+            <div class="map-wrapper">
+                <div class="map-grid-line" style="width: 100%; height: 1px; top: 50%;"></div>
+                <div class="map-grid-line" style="width: 1px; height: 100%; left: 50%;"></div>
+                <!-- Динамические узлы карты будут генерироваться через JS -->
+            </div>
         </section>
-    </div>
-</main>
+
 
 <script>
     // Игровое состояние
