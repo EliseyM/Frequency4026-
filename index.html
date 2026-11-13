@@ -345,6 +345,247 @@
         const timer = setInterval(() => {
             progress = Math.min(100, progress + Math.floor(Math.random() * 9) + 5);
             document.getElementById('splashProgress').style.width = progress + '%';
-            document.getElementById('progress
+            Text').textContent = `Загрузка: ${progress}%`;
+
+            if (progress >= 100) {
+                clearInterval(timer);
+                setTimeout(() => {
+                    const splash = document.getElementById('splashScreen');
+                    splash.style.opacity = '0';
+                    setTimeout(() => splash.remove(), 850);
+                }, 250);
+            }
+        }, 180);
+
+        try {
+            if (localStorage.getItem(SAVE_KEY)) {
+                document.getElementById('loadBtn').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.warn('Не удалось проверить сохранение:', error);
+        }
+    });
+
+    let traderOpen = false;
+
+    function addLog(message) {
+        const log = document.getElementById('log');
+        log.textContent = `${message}\n${log.textContent}`.trim();
+    }
+
+    function initGame() {
+        state = createNewState();
+        state.visited = [0];
+        traderOpen = false;
+
+        document.getElementById('modeSelection').classList.add('hidden');
+        document.getElementById('gameInterface').classList.remove('hidden');
+        document.getElementById('log').textContent = '';
+
+        addLog('Ты просыпаешься в мастерской. Путь домой начинается.');
+        renderGame();
+    }
+
+    function renderGame() {
+        document.getElementById('scrapText').textContent = state.scrap;
+        document.getElementById('ammoText').textContent = state.ammo;
+        document.getElementById('foodText').textContent = state.food;
+        document.getElementById('hpText').textContent = state.hp;
+        document.getElementById('timeText').textContent = `День ${state.day}`;
+        document.getElementById('radioText').textContent =
+            state.radioRepaired ? 'Починена' : 'Сломана';
+        document.getElementById('distanceValue').textContent = state.distance;
+
+        const objective = document.getElementById('objectiveText');
+        if (state.won) {
+            objective.textContent = 'Ты добрался до лагеря и нашёл свой народ.';
+        } else if (state.gameOver) {
+            objective.textContent = 'Поход завершён.';
+        } else if (!state.radioRepaired) {
+            objective.textContent = 'Собери 10 лома и почини КВ-радиостанцию.';
+        } else if (state.day < 15) {
+            objective.textContent = `Выживи 15 дней. Осталось: ${15 - state.day}.`;
+        } else if (state.distance > 0) {
+            objective.textContent = 'Следуй по секторам к лагерю.';
+        } else if (state.bossHp > 0) {
+            objective.textContent = 'Победи Радиоактивного Левиафана.';
+        } else {
+            objective.textContent = 'Путь домой свободен.';
+        }
+
+        document.getElementById('repairRadioBtn').disabled =
+            state.gameOver || state.won || state.radioRepaired || state.scrap < 10;
+
+        const distanceTracker = document.getElementById('distanceTracker');
+        distanceTracker.classList.toggle('hidden', !state.radioRepaired);
+
+        const bossPanel = document.getElementById('bossPanel');
+        const bossActive = state.radioRepaired && state.distance <= 0 && state.bossHp > 0;
+        bossPanel.classList.toggle('hidden', !bossActive);
+
+        document.getElementById('bossHpValue').textContent = state.bossHp;
+        document.getElementById('bossHpFill').style.width =
+            `${Math.max(0, state.bossHp / 500 * 100)}%`;
+        document.getElementById('attackBossBtn').disabled =
+            state.gameOver || state.won || state.ammo < 1;
+
+        document.getElementById('locationContainer').classList.toggle(
+            'hidden',
+            !state.radioRepaired || state.distance <= 0 || state.gameOver || state.won
+        );
+        document.getElementById('traderPanel').classList.toggle(
+            'hidden',
+            !traderOpen || state.gameOver || state.won
+        );
+
+        renderMap();
+        renderLocationButtons();
+
+        document.querySelectorAll('#actionButtons button').forEach(button => {
+            button.disabled = state.gameOver || state.won;
+        });
+    }
+
+    function renderMap() {
+        const wrapper = document.getElementById('mapWrapper');
+
+        mapNodes.forEach(node => {
+            let marker = document.getElementById(`map-node-${node.id}`);
+
+            if (!marker) {
+                marker = document.createElement('div');
+                marker.id = `map-node-${node.id}`;
+                marker.className = 'map-node';
+                marker.style.left = `${node.x}%`;
+                marker.style.top = `${node.y}%`;
+
+                const label = document.createElement('span');
+                label.textContent = node.name;
+                marker.appendChild(label);
+                wrapper.appendChild(marker);
+            }
+
+            marker.classList.toggle('active-node', node.id === state.currentNode);
+            marker.classList.toggle('military-node', node.type === 'military');
+        });
+    }
+
+    function renderLocationButtons() {
+        const container = document.getElementById('locationButtons');
+        container.replaceChildren();
+
+        mapNodes.forEach(node => {
+            if (node.id === state.currentNode) return;
+
+            const button = document.createElement('button');
+            button.textContent = `Перейти: ${node.name}`;
+            button.disabled = state.gameOver || state.won;
+            button.addEventListener('click', () => travelTo(node.id));
+            container.appendChild(button);
+        });
+    }
+
+    function doAction(action) {
+        if (state.gameOver || state.won) return;
+
+        if (action === 'scavenge') {
+            const found = Math.floor(Math.random() * 4) + 2;
+            state.scrap += found;
+            addLog(`Во время вылазки найдено лома: ${found}.`);
+            if (Math.random() < 0.2) {
+                state.hp = Math.max(0, state.hp - 10);
+                addLog('Обломки ранили тебя. Здоровье −10%.');
+            }
+        } else if (action === 'hunt') {
+            if (state.ammo < 1) {
+                addLog('Не хватает патронов для охоты.');
+                return;
+            }
+            state.ammo--;
+            const found = Math.floor(Math.random() * 3) + 2;
+            state.food += found;
+            addLog(`Охота удалась: добыто еды ${found}. Потрачен 1 патрон.`);
+        } else if (action === 'repair') {
+            if (state.radioRepaired) {
+                addLog('Радиостанция уже починена.');
+                return;
+            }
+            if (state.scrap < 10) {
+                addLog('Для ремонта нужно 10 лома.');
+                return;
+            }
+            state.scrap -= 10;
+            state.radioRepaired = true;
+            addLog('КВ-радиостанция заработала. На карте открылись секторы.');
+        } else if (action === 'sleep') {
+            sleep();
+            return;
+        }
+
+        checkHealth();
+        renderGame();
+    }
+
+    function sleep() {
+        if (state.food > 0) {
+            state.food--;
+            addLog('Ты поел и отдохнул. Потрачена 1 еда.');
+        } else {
+            state.hp = Math.max(0, state.hp - 20);
+            addLog('Еды нет. За ночь здоровье снизилось на 20%.');
+        }
+
+        state.day++;
+        addLog(`Наступил день ${state.day}.`);
+
+        checkHealth();
+        checkVictory();
+        renderGame();
+    }
+
+    function travelTo(nodeId) {
+        if (state.gameOver || state.won || !state.radioRepaired) return;
+
+        const node = mapNodes.find(item => item.id === nodeId);
+        if (!node || node.id === state.currentNode) return;
+
+        if (state.food > 0) {
+            state.food--;
+        } else {
+            state.hp = Math.max(0, state.hp - 15);
+            addLog('Переход без еды отнял 15% здоровья.');
+        }
+
+        state.currentNode = nodeId;
+
+        if (!state.visited.includes(nodeId)) {
+            state.visited.push(nodeId);
+            const distanceCost = { 1: 300, 2: 350, 3: 350 }[nodeId] || 0;
+            state.distance = Math.max(0, state.distance - distanceCost);
+
+            addLog(`Ты достиг сектора «${node.name}». Пройдено ${distanceCost} км.`);
+
+            if (node.type === 'military') {
+                state.ammo += 2;
+                state.scrap += 3;
+                addLog('На военном складе найдены 2 патрона и 3 лома.');
+            }
+        } else {
+            addLog(`Ты вернулся в сектор «${node.name}».`);
+        }
+
+        traderOpen = (nodeId === 1 || nodeId === 2) && Math.random() < 0.65;
+        if (traderOpen) addLog('В секторе появился странствующий торговец.');
+
+        if (state.distance <= 0) {
+            addLog('Впереди показался лагерь — но путь преградило чудовище!');
+        }
+
+        checkHealth();
+        renderGame();
+    }
+
+    function trade(item) {
+        if (state.gameOver || state.won ||
 
 *(This answer reached its length limit. Send “continue” to get the rest.)*
