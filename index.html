@@ -345,7 +345,7 @@
         const timer = setInterval(() => {
             progress = Math.min(100, progress + Math.floor(Math.random() * 9) + 5);
             document.getElementById('splashProgress').style.width = progress + '%';
-            Text').textContent = `Загрузка: ${progress}%`;
+            document.getElementById('progressText').textContent = `Загрузка: ${progress}%`;
 
             if (progress >= 100) {
                 clearInterval(timer);
@@ -433,159 +433,270 @@
             'hidden',
             !state.radioRepaired || state.distance <= 0 || state.gameOver || state.won
         );
+                const locationContainer = document.getElementById('locationContainer');
+        const locationButtons = document.getElementById('locationButtons');
+        const canTravel = state.day >= 15 && !state.gameOver && !state.won;
+
+        locationButtons.replaceChildren();
+
+        if (state.radioRepaired && state.distance > 0) {
+            const nextNode = mapNodes[state.currentNode + 1];
+
+            if (nextNode) {
+                const button = document.createElement('button');
+                button.textContent = canTravel
+                    ? `➡️ Отправиться: ${nextNode.name}`
+                    : `🔒 ${nextNode.name} — сначала переживи 15 дней`;
+                button.disabled = !canTravel;
+                button.addEventListener('click', travelToNextNode);
+                locationButtons.appendChild(button);
+            }
+        }
+
         document.getElementById('traderPanel').classList.toggle(
             'hidden',
             !traderOpen || state.gameOver || state.won
         );
 
-        renderMap();
-        renderLocationButtons();
+        if (state.gameOver || state.won) {
+            document.querySelectorAll('#actionButtons button, #traderPanel button')
+                .forEach(button => button.disabled = true);
+            document.getElementById('attackBossBtn').disabled = true;
+        } else {
+            document.querySelectorAll('#actionButtons button, #traderPanel button')
+                .forEach(button => button.disabled = false);
 
-        document.querySelectorAll('#actionButtons button').forEach(button => {
-            button.disabled = state.gameOver || state.won;
-        });
+            document.getElementById('repairRadioBtn').disabled =
+                state.radioRepaired || state.scrap < 10;
+            document.getElementById('attackBossBtn').disabled = state.ammo < 1;
+        }
+
+        renderMap();
     }
 
     function renderMap() {
         const wrapper = document.getElementById('mapWrapper');
+        wrapper.innerHTML = `
+            <div class="map-grid-line" style="width:100%;height:1px;top:50%"></div>
+            <div class="map-grid-line" style="width:1px;height:100%;left:50%"></div>
+        `;
 
         mapNodes.forEach(node => {
-            let marker = document.getElementById(`map-node-${node.id}`);
+            const marker = document.createElement('div');
+            marker.className = 'map-node';
 
-            if (!marker) {
-                marker = document.createElement('div');
-                marker.id = `map-node-${node.id}`;
-                marker.className = 'map-node';
-                marker.style.left = `${node.x}%`;
-                marker.style.top = `${node.y}%`;
+            if (node.type === 'military') marker.classList.add('military-node');
+            if (state.visited?.includes(node.id)) marker.classList.add('active-node');
 
-                const label = document.createElement('span');
-                label.textContent = node.name;
-                marker.appendChild(label);
-                wrapper.appendChild(marker);
-            }
+            marker.style.left = `${node.x}%`;
+            marker.style.top = `${node.y}%`;
 
-            marker.classList.toggle('active-node', node.id === state.currentNode);
-            marker.classList.toggle('military-node', node.type === 'military');
-        });
-    }
-
-    function renderLocationButtons() {
-        const container = document.getElementById('locationButtons');
-        container.replaceChildren();
-
-        mapNodes.forEach(node => {
-            if (node.id === state.currentNode) return;
-
-            const button = document.createElement('button');
-            button.textContent = `Перейти: ${node.name}`;
-            button.disabled = state.gameOver || state.won;
-            button.addEventListener('click', () => travelTo(node.id));
-            container.appendChild(button);
+            const label = document.createElement('span');
+            label.textContent = node.name;
+            marker.appendChild(label);
+            wrapper.appendChild(marker);
         });
     }
 
     function doAction(action) {
         if (state.gameOver || state.won) return;
 
+        traderOpen = false;
+
         if (action === 'scavenge') {
             const found = Math.floor(Math.random() * 4) + 2;
             state.scrap += found;
-            addLog(`Во время вылазки найдено лома: ${found}.`);
-            if (Math.random() < 0.2) {
+            addLog(`На вылазке найдено лома: ${found}.`);
+
+            if (Math.random() < 0.25) {
                 state.hp = Math.max(0, state.hp - 10);
-                addLog('Обломки ранили тебя. Здоровье −10%.');
+                addLog('Вылазка закончилась травмой: −10% здоровья.');
             }
         } else if (action === 'hunt') {
             if (state.ammo < 1) {
-                addLog('Не хватает патронов для охоты.');
+                addLog('Для охоты нужен хотя бы один патрон.');
                 return;
             }
+
             state.ammo--;
-            const found = Math.floor(Math.random() * 3) + 2;
-            state.food += found;
-            addLog(`Охота удалась: добыто еды ${found}. Потрачен 1 патрон.`);
+            const foundFood = Math.random() < 0.75 ? 2 : 1;
+            state.food += foundFood;
+            addLog(`Охота удалась: добыто еды ${foundFood}, потрачен 1 патрон.`);
+
+            if (Math.random() < 0.2) {
+                state.hp = Math.max(0, state.hp - 10);
+                addLog('Во время охоты ты получил ранение: −10% здоровья.');
+            }
         } else if (action === 'repair') {
-            if (state.radioRepaired) {
-                addLog('Радиостанция уже починена.');
-                return;
-            }
-            if (state.scrap < 10) {
-                addLog('Для ремонта нужно 10 лома.');
-                return;
-            }
+            if (state.radioRepaired || state.scrap < 10) return;
+
             state.scrap -= 10;
             state.radioRepaired = true;
-            addLog('КВ-радиостанция заработала. На карте открылись секторы.');
+            addLog('КВ-радиостанция починена. Теперь можно двигаться к лагерю.');
         } else if (action === 'sleep') {
-            sleep();
-            return;
-        }
-
-        checkHealth();
-        renderGame();
-    }
-
-    function sleep() {
-        if (state.food > 0) {
-            state.food--;
-            addLog('Ты поел и отдохнул. Потрачена 1 еда.');
-        } else {
-            state.hp = Math.max(0, state.hp - 20);
-            addLog('Еды нет. За ночь здоровье снизилось на 20%.');
-        }
-
-        state.day++;
-        addLog(`Наступил день ${state.day}.`);
-
-        checkHealth();
-        checkVictory();
-        renderGame();
-    }
-
-    function travelTo(nodeId) {
-        if (state.gameOver || state.won || !state.radioRepaired) return;
-
-        const node = mapNodes.find(item => item.id === nodeId);
-        if (!node || node.id === state.currentNode) return;
-
-        if (state.food > 0) {
-            state.food--;
-        } else {
-            state.hp = Math.max(0, state.hp - 15);
-            addLog('Переход без еды отнял 15% здоровья.');
-        }
-
-        state.currentNode = nodeId;
-
-        if (!state.visited.includes(nodeId)) {
-            state.visited.push(nodeId);
-            const distanceCost = { 1: 300, 2: 350, 3: 350 }[nodeId] || 0;
-            state.distance = Math.max(0, state.distance - distanceCost);
-
-            addLog(`Ты достиг сектора «${node.name}». Пройдено ${distanceCost} км.`);
-
-            if (node.type === 'military') {
-                state.ammo += 2;
-                state.scrap += 3;
-                addLog('На военном складе найдены 2 патрона и 3 лома.');
+            if (state.food > 0) {
+                state.food--;
+                addLog('Ты поел и отдохнул. Потрачена 1 еда.');
+            } else {
+                state.hp = Math.max(0, state.hp - 15);
+                addLog('Ты лёг спать голодным: −15% здоровья.');
             }
-        } else {
-            addLog(`Ты вернулся в сектор «${node.name}».`);
+
+            if (state.day < 15) state.day++;
+            addLog(`Наступил день ${state.day}.`);
+
+            if (Math.random() < 0.2) {
+                traderOpen = true;
+                addLog('На стоянке появился странствующий торговец.');
+            }
         }
 
-        traderOpen = (nodeId === 1 || nodeId === 2) && Math.random() < 0.65;
-        if (traderOpen) addLog('В секторе появился странствующий торговец.');
+        checkGameEnd();
+        renderGame();
+    }
 
-        if (state.distance <= 0) {
-            addLog('Впереди показался лагерь — но путь преградило чудовище!');
+    function travelToNextNode() {
+        if (state.gameOver || state.won || state.day < 15 || state.distance <= 0) return;
+
+        const nextNode = mapNodes[state.currentNode + 1];
+        if (!nextNode) return;
+
+        state.currentNode = nextNode.id;
+        state.visited ??= [];
+        state.visited.push(nextNode.id);
+
+        const distanceByNode = [0, 300, 350, 350];
+        state.distance = Math.max(0, state.distance - distanceByNode[nextNode.id]);
+
+        addLog(`Ты добрался до сектора «${nextNode.name}». Осталось ${state.distance} км.`);
+
+        if (nextNode.type === 'military') {
+            state.ammo += 3;
+            state.scrap += 3;
+            addLog('На военном складе найдены 3 патрона и 3 лома.');
+        } else if (Math.random() < 0.5) {
+            state.food++;
+            addLog('В секторе найдена 1 еда.');
         }
 
-        checkHealth();
+        if (Math.random() < 0.25) {
+            state.hp = Math.max(0, state.hp - 10);
+            addLog('Путь оказался опасным: −10% здоровья.');
+        }
+
+        if (state.distance === 0) {
+            addLog('Впереди появляется Радиоактивный Левиафан!');
+        }
+
+        checkGameEnd();
+        renderGame();
+    }
+
+    function attackFinalBoss() {
+        if (state.gameOver || state.won || state.distance > 0 || state.ammo < 1) return;
+
+        state.ammo--;
+        const damage = Math.floor(Math.random() * 41) + 80;
+        state.bossHp = Math.max(0, state.bossHp - damage);
+        addLog(`Общий залп наносит чудовищу ${damage} урона. Осталось ${state.bossHp} HP.`);
+
+        if (state.bossHp === 0) {
+            state.won = true;
+            addLog('Левиафан повержен. Ты добрался до своего народа!');
+        }
+
         renderGame();
     }
 
     function trade(item) {
-        if (state.gameOver || state.won ||
+        if (state.gameOver || state.won) return;
 
-*(This answer reached its length limit. Send “continue” to get the rest.)*
+        if (item === 'ammo' && state.scrap >= 3) {
+            state.scrap -= 3;
+            state.ammo++;
+            addLog('Ты обменял 3 лома на 1 патрон.');
+        } else if (item === 'food' && state.scrap >= 2) {
+            state.scrap -= 2;
+            state.food++;
+            addLog('Ты обменял 2 лома на 1 еду.');
+        } else if (item === 'sell' && state.scrap >= 5) {
+            state.scrap -= 5;
+            state.food++;
+            state.ammo++;
+            addLog('Ты обменял 5 лома на 1 еду и 1 патрон.');
+        } else {
+            addLog('Не хватает лома для обмена.');
+        }
+
+        renderGame();
+    }
+
+    function checkGameEnd() {
+        if (state.hp <= 0 && !state.gameOver) {
+            state.hp = 0;
+            state.gameOver = true;
+            addLog('Здоровье закончилось. Поход завершён.');
+        }
+    }
+
+    function saveGame() {
+        try {
+            localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+            addLog('Игра сохранена.');
+            document.getElementById('loadBtn').classList.remove('hidden');
+        } catch (error) {
+            addLog('Не удалось сохранить игру в этом браузере.');
+            console.error('Ошибка сохранения:', error);
+        }
+    }
+
+    function loadGame() {
+        try {
+            const saved = localStorage.getItem(SAVE_KEY);
+            if (!saved) {
+                addLog('Сохранение не найдено.');
+                return;
+            }
+
+            const loadedState = JSON.parse(saved);
+            state = { ...createNewState(), ...loadedState };
+            state.visited ??= [0];
+            traderOpen = false;
+
+            document.getElementById('modeSelection').classList.add('hidden');
+            document.getElementById('gameInterface').classList.remove('hidden');
+            document.getElementById('log').textContent = '';
+            addLog('Сохранение загружено.');
+            renderGame();
+        } catch (error) {
+            addLog('Не удалось загрузить сохранение.');
+            console.error('Ошибка загрузки:', error);
+        }
+    }
+
+    function clearSaveData() {
+        try {
+            localStorage.removeItem(SAVE_KEY);
+            document.getElementById('loadBtn').classList.add('hidden');
+            addLog('Сохранение удалено.');
+        } catch (error) {
+            console.error('Не удалось удалить сохранение:', error);
+        }
+    }
+
+    function returnToMenu() {
+        document.getElementById('gameInterface').classList.add('hidden');
+        document.getElementById('modeSelection').classList.remove('hidden');
+        traderOpen = false;
+
+        try {
+            if (localStorage.getItem(SAVE_KEY)) {
+                document.getElementById('loadBtn').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.warn('Не удалось проверить сохранение:', error);
+        }
+    }
+</script>
+</body>
+</html>
